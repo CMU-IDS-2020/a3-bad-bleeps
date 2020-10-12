@@ -8,7 +8,7 @@ st.title("Let's analyze some Crime Data 📊.")
 def load_data():
     # Load the crime data from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present-Dashboard/5cd6-ry5g
     crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json"
-    return pd.read_csv(crime_url)
+    return pd.read_json(crime_url)
 
 df = load_data()
 
