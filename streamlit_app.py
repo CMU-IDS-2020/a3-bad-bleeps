@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-st.title("Let's analyze some Penguin Data 🐧📊.")
+st.title("Let's analyze some Crime Data 📊.")
 
 @st.cache  # add caching so we load the data only once
 def load_data():
-    # Load the penguin data from https://github.com/allisonhorst/palmerpenguins.
-    penguins_url = "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/v0.1.0/inst/extdata/penguins.csv"
-    return pd.read_csv(penguins_url)
+    # Load the crime data from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present-Dashboard/5cd6-ry5g
+    crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json"
+    return pd.read_csv(crime_url)
 
 df = load_data()
 
