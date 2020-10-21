@@ -158,7 +158,7 @@ chart2 = alt.layer(
     width=600, height=300
 )
 
-st.write(chart2)
+#st.write(chart2)
 
 
 @st.cache
@@ -173,16 +173,16 @@ def load_coordinate_data(url):
 location_url = 'https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,x_coordinate,count(x_coordinate),y_coordinate,count(y_coordinate)&$group=year,x_coordinate,y_coordinate'
 coordinate_df = load_coordinate_data(location_url)
 
-st.write(coordinate_df)
+#st.write(coordinate_df)
 
 brush = alt.selection(type='interval')
 slider = alt.binding_range(min=2001, max=2020, name='year: ', step=1)
 selector = alt.selection_single(name='SelectorName', fields=['year'], bind=slider)
 
+
 location_chart = alt.Chart(coordinate_df).mark_point().encode(
     alt.X('x_coordinate:Q', scale=alt.Scale(domain=(1100000,1205000))),
-    alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000))),
-    tooltip='y_coordinate'
+    alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000)))
 ).add_selection(brush).add_selection(selector)
 
 
