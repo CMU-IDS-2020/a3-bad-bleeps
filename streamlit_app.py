@@ -177,22 +177,30 @@ st.write(chart2)
 @st.cache
 def load_coordinate_data(url):
     df = pd.read_json(url)
-    df.columns = ['freq', 'y_freq', 'x_coordinate', 'y_coordinate']
+    df.columns = ['year', 'x_coordinate','freq', 'y_coordinate', 'y_freq']
     df = df.drop(columns=['y_freq'])
     df = df.dropna(axis=0)
     df = df[df['x_coordinate'] > 0]
     return df
 
-location_url = 'https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=x_coordinate,count(x_coordinate),y_coordinate,count(y_coordinate)&$group=x_coordinate,y_coordinate'
+location_url = 'https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,x_coordinate,count(x_coordinate),y_coordinate,count(y_coordinate)&$group=year,x_coordinate,y_coordinate'
 coordinate_df = load_coordinate_data(location_url)
 
 st.write(coordinate_df)
 
 brush = alt.selection(type='interval')
 
+year_slider = alt.binding_range(min=2001, max=2020, step=1)
+slider_selection = alt.selection_single(bind=year_slider, fields=['Release_Year'], name="Release Year_")
+
 location_chart = alt.Chart(coordinate_df).mark_point().encode(
     alt.X('x_coordinate:Q', scale=alt.Scale(zero=False)),
     alt.Y('y_coordinate:Q', scale=alt.Scale(zero=False))
 ).add_selection(brush)
 
-st.write(location_chart)
+count_chart = alt.Chart(coordinate_df).mark_bar().encode(
+    alt.X('x_coordinate:Q'),
+    alt.Y('sum(freq)')
+).transform_filter(brush)
+
+st.write(location_chart | count_chart)
