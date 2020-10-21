@@ -21,6 +21,8 @@ st.write("Let's look at raw data in the Pandas Data Frame.")
 
 st.write(df)
 
+
+
 # st.write("Hmm 🤔, is there some correlation between body mass and flipper length? Let's make a scatterplot with [Altair](https://altair-viz.github.io/) to find.")
 
 # chart = alt.Chart(df).mark_point().encode(
@@ -33,7 +35,38 @@ st.write(df)
 
 # st.write(chart)
 
-#selection = alt.selection_multi(fields=['Primary Type'], bind='legend')
+selection = alt.selection_multi(fields=['primary_type'])
+
+chart3 = alt.Chart(df, height=600).mark_area().encode(
+    alt.X("year:O"),
+    alt.Y("num_crimes:Q", stack='center', axis=None),
+    alt.Color("primary_type:N", scale=alt.Scale(scheme='category20b')),
+    opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
+    tooltip='primary_type'
+).add_selection(
+    selection
+)
+
+background = alt.Chart(df).mark_bar().encode(
+    alt.X('year:O'),
+    alt.Y('sum(num_crimes):Q'),
+    color=alt.value('#ddd')
+)
+
+hists = chart3.mark_bar(opacity=0.5, thickness=100).encode(
+    alt.X('year:O'),
+    alt.Y('num_crimes:Q'),
+    color=alt.Color('primary_type:N', scale=alt.Scale(scheme='category20b'))
+).transform_filter(
+    selection
+)
+
+
+#highlight = hist_base.transform_filter(selection)
+
+
+st.write(chart3 | background + hists)
+
 
 # chart = alt.Chart(df).mark_area().encode(
 #     alt.X("Year:T", axis=alt.Axis(domain=False, format='%Y', tickSize=0)),
@@ -139,3 +172,27 @@ chart2 = alt.layer(
 )
 
 st.write(chart2)
+
+
+@st.cache
+def load_coordinate_data(url):
+    df = pd.read_json(url)
+    df.columns = ['freq', 'y_freq', 'x_coordinate', 'y_coordinate']
+    df = df.drop(columns=['y_freq'])
+    df = df.dropna(axis=0)
+    df = df[df['x_coordinate'] > 0]
+    return df
+
+location_url = 'https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=x_coordinate,count(x_coordinate),y_coordinate,count(y_coordinate)&$group=x_coordinate,y_coordinate'
+coordinate_df = load_coordinate_data(location_url)
+
+st.write(coordinate_df)
+
+brush = alt.selection(type='interval')
+
+location_chart = alt.Chart(coordinate_df).mark_point().encode(
+    alt.X('x_coordinate:Q', scale=alt.Scale(zero=False)),
+    alt.Y('y_coordinate:Q', scale=alt.Scale(zero=False))
+).add_selection(brush)
+
+st.write(location_chart)
