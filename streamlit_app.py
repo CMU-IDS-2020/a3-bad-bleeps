@@ -5,6 +5,8 @@ import geopandas as gpd
 import altair as alt
 import sqlite3
 import calendar
+from ml_model import *
+import streamlit.components.v1 as components
 
 st.title("Let's analyze some Crime Data 📊.")
 
@@ -12,31 +14,12 @@ st.title("Let's analyze some Crime Data 📊.")
 def load_data():
     # url for district arrests
     # crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=district,count(district),sum(case(arrest='1',1,true,0))&$group=district"
-    crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,count(year)&$group=year"
+    crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,district,count(district)&$group=year,district"
     return pd.read_json(crime_url)
 
-@st.cache
-def load_map():
-    return alt.InlineData(values="https://data.cityofchicago.org/resource/24zt-jpfn.json", format=alt.DataFormat(property='the_geom',type='json'))
-    return alt.Data(url="https://data.cityofchicago.org/resource/24zt-jpfn.json$select=district,count(district),sum(arrest)&$group=district", format=alt.DataFormat(property='the_geom',type='json'))
-
-
 df = load_data()
-# df["arrest_ratio"] = df["district"] + df["ward"]
-
-st.write("Let's look at raw data in the Pandas Data Frame.")
-
 st.write(df)
 
-# st.write(gdf)
-
-# choro = alt.Chart(gdf).mark_geoshape(
-#     stroke='black'
-# ).properties( 
-#     width=650,
-#     height=800
-# )
-# st.write(choro)
 
 # chart = alt.Chart(df).mark_bar().encode(
 #     x=alt.X("district:O", sort='y'),
@@ -68,12 +51,8 @@ st.write(source)
 nearest = alt.selection(type='single', nearest=True, on='mouseover',
                         fields=['year_month'], empty='none')
 
-start_year, end_year = st.slider("Start Year", 2001, 2020, (2001, 2020))
-
 # The basic line
-line = alt.Chart(source).mark_line(interpolate='basis').transform_filter(
-    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])
-).encode(
+line = alt.Chart(source).mark_line(interpolate='basis').encode(
     x='year_month:T',
     y='count:Q',
 ).properties(
@@ -128,25 +107,96 @@ chart2 = alt.layer(
 )
 st.write(chart2)
 
+
+
+
+url_geojson = "https://data.cityofchicago.org/resource/24zt-jpfn.geojson"
+data_geojson_remote = alt.Data(url=url_geojson, format=alt.DataFormat(property='the_geom',type='json'))
+stations = pd.read_json("https://data.cityofchicago.org/resource/z8bn-74gv.json")
+stations = stations[stations['district'] != 'Headquarters'] 
+# print(stations)
+
+
+# chart object
+district_map = alt.Chart(data_geojson_remote).mark_geoshape(
+    fill='lightgray',
+    stroke='white'
+)
+
+# Points and text
+hover = alt.selection(type='single', on='mouseover', nearest=True,
+                      fields=['latitude', 'longitude', 'district'])
+
+
+base = alt.Chart(stations).encode(
+    longitude='longitude:Q',
+    latitude='latitude:Q',
+)
+
+text = base.mark_text(dx=10, dy=-10, align='right').encode(
+    alt.Text('district', type='nominal'),
+    opacity=alt.condition(~hover, alt.value(0), alt.value(1))
+)
+
+points = base.mark_point().encode(
+    color=alt.value('black'),
+    size=alt.condition(~hover, alt.value(30), alt.value(100)),
+).add_selection(hover)
+
+district_map + points + text
+
+start_year, end_year = st.slider("Start Year", 2001, 2020, (2001, 2020))
+
 chart = alt.Chart(df).mark_line().transform_filter(
     (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])
 ).encode(
     x='year:O',
-    y='count_year'
+    y='count_district',
+    color='district:O'
 ).properties( 
     width=650,
     height=400
 )
 
 st.write(chart)
+# # select district
+# district_values = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '14', '15', '16', '17', '18', '19', '20', '22', '24', '25']
+# options = list(range(len(district_values)))
+# select_district = st.selectbox("district", options, format_func=lambda x: district_values[x])
 
-url_geojson = "https://data.cityofchicago.org/resource/24zt-jpfn.geojson"
-data_geojson_remote = alt.Data(url=url_geojson, format=alt.DataFormat(property='the_geom',type='json'))
+# st.write(district_values[select_district])
 
-# chart object
-district_map = alt.Chart(data_geojson_remote).mark_geoshape(
-).encode(
-    color="DIST_NUM:O"
-)
-st.write(data_geojson_remote)
-st.write(district_map)
+
+st.write(comp)
+
+# select crime type
+type_values = ['arson', 'assault', 'battery', 'burglary', 'concealed carry license violation', 'criminal damage', 'criminal sexual assault', 'criminal trespass', 'crim sexual assault', 'deceptive practice', 'domestic violence', 'gambling', 
+'homicide', 'human trafficking', 'interference with public officer', 'intimidation', 'kidnapping', 'liquor law violation', 'motor vehicle theft', 'narcotics', 'non - criminal', 'non-criminal', 'non-criminal (subject specified)', 'obscenity', 'offense involving children', 'other narcotic violation', 'other offense', 'prostitution', 'public indecency', 'public peace violation', 'ritualism', 'robbery', 'sex offense', 'stalking', 'theft', 'weapons violation']
+options = list(range(len(type_values)))
+select_type = st.selectbox("crime type", options, format_func=lambda x: type_values[x])
+
+# st.write(type_values[select_type])
+
+# select community area
+beat_values = [111, 112, 113, 114, 121, 122, 123, 124, 131, 132, 133, 134, 211, 212, 213, 214, 215, 221, 222, 223, 224, 225, 231, 232, 233, 234, 235, 310, 311, 312, 313, 314, 321, 322, 323, 324, 331, 332, 333, 334, 411, 412, 413, 414, 421, 
+422, 423, 424, 430, 431, 432, 433, 434, 511, 512, 513, 522, 523, 524, 531, 532, 533, 611, 612, 613, 614, 621, 622, 623, 624, 631, 632, 633, 634, 711, 712, 713, 714, 715, 722, 723, 724, 725, 726, 731, 732, 733, 734, 735, 811, 812, 813, 814, 815, 821, 822, 823, 824, 825, 831, 832, 833, 834, 835, 911, 912, 913, 914, 915, 921, 922, 923, 924, 925, 931, 932, 933, 934, 935, 1011, 1012, 1013, 1014, 1021, 1022, 1023, 1024, 1031, 1032, 1033, 1034, 1111, 1112, 1113, 1114, 1115, 1121, 1122, 1123, 1124, 1125, 1131, 1132, 1133, 1134, 1135, 1211, 1212, 1213, 1214, 1215, 1221, 1222, 1223, 1224, 1225, 1231, 1232, 1233, 1234, 1235, 1311, 1312, 1313, 1322, 1323, 1324, 1331, 1332, 1333, 1411, 1412, 1413, 1414, 1421, 1422, 1423, 1424, 1431, 1432, 1433, 1434, 1511, 1512, 1513, 1522, 1523, 1524, 1531, 1532, 1533, 1611, 1612, 1613, 1614, 1621, 1622, 1623, 1624, 1631, 1632, 1633, 1634, 1651, 1652, 1653, 1654, 1655, 
+1711, 1712, 1713, 1722, 1723, 1724, 1731, 1732, 1733, 1811, 1812, 1813, 1814, 1821, 1822, 1823, 1824, 1831, 1832, 1833, 1834, 1911, 1912, 1913, 1914, 1915, 1921, 1922, 1923, 1924, 1925, 1931, 1932, 1933, 1934, 1935, 2011, 2012, 2013, 2022, 2023, 2024, 2031, 2032, 2033, 2111, 2112, 2113, 2122, 2123, 2124, 2131, 2132, 2133, 2211, 2212, 2213, 2221, 2222, 2223, 2232, 2233, 2234, 2311, 2312, 2313, 2322, 2323, 2324, 2331, 2332, 2333, 2411, 2412, 2413, 2422, 2423, 2424, 2431, 2432, 2433, 2511, 2512, 2513, 2514, 2515, 2521, 2522, 2523, 2524, 2525, 2531, 2532, 2533, 2534, 2535]
+options = list(range(len(beat_values)))
+select_beat = st.selectbox("beat", options, format_func=lambda x: beat_values[x])
+
+domestic = st.checkbox("Domestic")
+
+crime_input = pd.DataFrame(columns = cols)
+crime_input.loc[0, 'primary_type'] = type_values[select_type]
+crime_input.loc[0, 'domestic'] = domestic
+crime_input.loc[0, 'beat'] = beat_values[select_beat]
+crime_input.loc[0, 'year'] = 2020
+st.write(crime_input)
+
+
+predicted = clf.fit(X_train, y_train).predict(crime_input.loc[[0]])
+if predicted:
+    st.write("prediction: ", True)
+else:
+    st.write("prediction: ", False)
+
