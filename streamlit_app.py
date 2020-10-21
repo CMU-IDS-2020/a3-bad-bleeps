@@ -2,7 +2,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-st.title("Let's analyze some Crime Data 📊.")
+#### Title ####
+
+st.title("Analyzing Chicago Crime Data.")
+st.write("If Batman were to study data visualization, it might look something like this.")
+st.markdown("<p>Data taken from the <a href='https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present-Dashboard/5cd6-ry5g'>Chicago Crimes Dataset.</a></p>", unsafe_allow_html = True)
 
 @st.cache  # add caching so we load the data only once
 def load_data(url):
@@ -15,32 +19,19 @@ def load_data(url):
 crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,primary_type,count(primary_type),sum(case(arrest='1',1,true,0))&$group=primary_type,year"
 df = load_data(crime_url)
 
+#### Analysis Intro ####
+st.markdown("<h2>Overall Crime Frequencies</h2>", unsafe_allow_html=True)
+st.write("What is the current trend with the number of crimes in Chicago? Is this trend similarly reflected within each type of crime as well?")
+st.write("Click on multiple types of crimes to see the changes in frequency over time for each type.")
 
 
-st.write("Let's look at raw data in the Pandas Data Frame.")
-
-st.write(df)
-
-
-
-# st.write("Hmm 🤔, is there some correlation between body mass and flipper length? Let's make a scatterplot with [Altair](https://altair-viz.github.io/) to find.")
-
-# chart = alt.Chart(df).mark_point().encode(
-#     x=alt.X("body_mass_g", scale=alt.Scale(zero=False)),
-#     y=alt.Y("flipper_length_mm", scale=alt.Scale(zero=False)),
-#     color=alt.Y("species")
-# ).properties(
-#     width=600, height=400
-# ).interactive()
-
-# st.write(chart)
 
 selection = alt.selection_multi(fields=['primary_type'])
 
-chart3 = alt.Chart(df, height=600).mark_area().encode(
+chart3 = alt.Chart(df).mark_area().encode(
     alt.X("year:O"),
     alt.Y("num_crimes:Q", stack='center', axis=None),
-    alt.Color("primary_type:N", scale=alt.Scale(scheme='category20b')),
+    alt.Color("primary_type:N", scale=alt.Scale(scheme='category20b'), legend=None),
     opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
     tooltip='primary_type'
 ).add_selection(
@@ -56,7 +47,7 @@ background = alt.Chart(df).mark_bar().encode(
 hists = chart3.mark_bar(opacity=0.5, thickness=100).encode(
     alt.X('year:O'),
     alt.Y('num_crimes:Q'),
-    color=alt.Color('primary_type:N', scale=alt.Scale(scheme='category20b'))
+    color=alt.Color('primary_type:N', scale=alt.Scale(scheme='category20b'), legend=None)
 ).transform_filter(
     selection
 )
@@ -86,7 +77,7 @@ highlight = alt.selection(type='single', on='mouseover', fields=['primary_type']
 crimes_base = alt.Chart(df).encode(
     alt.X('year:O'),
     alt.Y('num_crimes:Q'),
-    alt.Color('primary_type:N'),
+    alt.Color('primary_type:N',legend=None),
     tooltip='primary_type:N'
 )
 
@@ -94,8 +85,6 @@ crimes_points = crimes_base.mark_circle().encode(
     opacity=alt.value(0)
 ).add_selection(
     highlight
-).properties(
-    width=600
 )
 
 crimes_lines = crimes_base.mark_line().encode(
@@ -106,7 +95,7 @@ crimes_lines = crimes_base.mark_line().encode(
 arrests_base = alt.Chart(df).encode(
     alt.X('year:O'),
     alt.Y('arrest_rate:Q'),
-    alt.Color('primary_type:N'),
+    alt.Color('primary_type:N', legend=None),
     tooltip='primary_type:N'
 )
 
@@ -114,13 +103,11 @@ arrests_points = arrests_base.mark_circle().encode(
     opacity=alt.value(0)
 ).add_selection(
     highlight
-).properties(
-    width=600
 )
 
 arrests_lines = arrests_base.mark_line().encode(
     size=alt.condition(~highlight, alt.value(1), alt.value(3)),
-    opacity=alt.condition(highlight, alt.value(1), alt.value(0.1))
+    opacity=alt.condition(highlight, alt.value(1), alt.value(0.3))
 )
 
 st.write(crimes_points+crimes_lines | arrests_points+arrests_lines)
@@ -189,18 +176,22 @@ coordinate_df = load_coordinate_data(location_url)
 st.write(coordinate_df)
 
 brush = alt.selection(type='interval')
-
-year_slider = alt.binding_range(min=2001, max=2020, step=1)
-slider_selection = alt.selection_single(bind=year_slider, fields=['Release_Year'], name="Release Year_")
+slider = alt.binding_range(min=2001, max=2020, name='year: ', step=1)
+selector = alt.selection_single(name='SelectorName', fields=['year'], bind=slider)
 
 location_chart = alt.Chart(coordinate_df).mark_point().encode(
-    alt.X('x_coordinate:Q', scale=alt.Scale(zero=False)),
-    alt.Y('y_coordinate:Q', scale=alt.Scale(zero=False))
-).add_selection(brush)
+    alt.X('x_coordinate:Q', scale=alt.Scale(domain=(1100000,1205000))),
+    alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000))),
+    tooltip='y_coordinate'
+).add_selection(brush).add_selection(selector)
 
-count_chart = alt.Chart(coordinate_df).mark_bar().encode(
-    alt.X('x_coordinate:Q'),
-    alt.Y('sum(freq)')
-).transform_filter(brush)
+
+
+
+count_chart = alt.Chart(coordinate_df).mark_point().encode(
+    alt.X('x_coordinate:Q', scale=alt.Scale(domain=(1100000,1205000))),
+    alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000))),
+    size='sum(freq):Q'
+).transform_filter(brush).transform_filter(selector)
 
 st.write(location_chart | count_chart)
