@@ -372,7 +372,7 @@ select_beat = st.sidebar.selectbox("beat", options, format_func=lambda x: beat_v
 
 domestic = st.sidebar.checkbox("Domestic")
 
-crime_input = pd.DataFrame(columns = cols)
+crime_input = pd.DataFrame()
 crime_input.loc[0, 'primary_type'] = type_values[select_type]
 crime_input.loc[0, 'domestic'] = domestic
 crime_input.loc[0, 'beat'] = beat_values[select_beat]
