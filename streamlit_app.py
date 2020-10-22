@@ -359,47 +359,31 @@ st.sidebar.title("Would you be arrested?")
 st.sidebar.write("Enter your own data here and see.")
 
 # select crime type
-type_values = ['arson', 'assault', 'battery', 'burglary', 'concealed carry license violation', 'criminal damage', 'criminal sexual assault', 'criminal trespass', 'crim sexual assault', 'deceptive practice', 'domestic violence', 'gambling', 
-'homicide', 'human trafficking', 'interference with public officer', 'intimidation', 'kidnapping', 'liquor law violation', 'motor vehicle theft', 'narcotics', 'non - criminal', 'non-criminal', 'non-criminal (subject specified)', 'obscenity', 'offense involving children', 'other narcotic violation', 'other offense', 'prostitution', 'public indecency', 'public peace violation', 'ritualism', 'robbery', 'sex offense', 'stalking', 'theft', 'weapons violation']
+type_values = ['ARSON', 'ASSAULT', 'BATTERY', 'BURGLARY', 'CONCEALED CARRY LICENSE VIOLATION', 'CRIM SEXUAL ASSAULT', 'CRIMINAL DAMAGE', 'CRIMINAL SEXUAL ASSAULT', 'CRIMINAL TRESPASS', 'DECEPTIVE PRACTICE', 'GAMBLING', 'HOMICIDE', 'HUMAN TRAFFICKING', 'INTERFERENCE WITH PUBLIC OFFICER', 
+'INTIMIDATION', 'KIDNAPPING', 'LIQUOR LAW VIOLATION', 'MOTOR VEHICLE THEFT', 'NARCOTICS', 'NON-CRIMINAL', 'OBSCENITY', 'OFFENSE INVOLVING CHILDREN', 'OTHER NARCOTIC VIOLATION', 'OTHER OFFENSE', 'PROSTITUTION', 'PUBLIC INDECENCY', 'PUBLIC PEACE VIOLATION', 'ROBBERY', 'SEX OFFENSE', 'STALKING', 'THEFT', 'WEAPONS VIOLATION']
 options = list(range(len(type_values)))
 select_type = st.sidebar.selectbox("crime type", options, format_func=lambda x: type_values[x])
-
-# st.write(type_values[select_type])
-
-# select community area
-beat_values = [111, 112, 113, 114, 121, 122, 123, 124, 131, 132, 133, 134, 211, 212, 213, 214, 215, 221, 222, 223, 224, 225, 231, 232, 233, 234, 235, 310, 311, 312, 313, 314, 321, 322, 323, 324, 331, 332, 333, 334, 411, 412, 413, 414, 421, 
-422, 423, 424, 430, 431, 432, 433, 434, 511, 512, 513, 522, 523, 524, 531, 532, 533, 611, 612, 613, 614, 621, 622, 623, 624, 631, 632, 633, 634, 711, 712, 713, 714, 715, 722, 723, 724, 725, 726, 731, 732, 733, 734, 735, 811, 812, 813, 814, 815, 821, 822, 823, 824, 825, 831, 832, 833, 834, 835, 911, 912, 913, 914, 915, 921, 922, 923, 924, 925, 931, 932, 933, 934, 935, 1011, 1012, 1013, 1014, 1021, 1022, 1023, 1024, 1031, 1032, 1033, 1034, 1111, 1112, 1113, 1114, 1115, 1121, 1122, 1123, 1124, 1125, 1131, 1132, 1133, 1134, 1135, 1211, 1212, 1213, 1214, 1215, 1221, 1222, 1223, 1224, 1225, 1231, 1232, 1233, 1234, 1235, 1311, 1312, 1313, 1322, 1323, 1324, 1331, 1332, 1333, 1411, 1412, 1413, 1414, 1421, 1422, 1423, 1424, 1431, 1432, 1433, 1434, 1511, 1512, 1513, 1522, 1523, 1524, 1531, 1532, 1533, 1611, 1612, 1613, 1614, 1621, 1622, 1623, 1624, 1631, 1632, 1633, 1634, 1651, 1652, 1653, 1654, 1655, 
-1711, 1712, 1713, 1722, 1723, 1724, 1731, 1732, 1733, 1811, 1812, 1813, 1814, 1821, 1822, 1823, 1824, 1831, 1832, 1833, 1834, 1911, 1912, 1913, 1914, 1915, 1921, 1922, 1923, 1924, 1925, 1931, 1932, 1933, 1934, 1935, 2011, 2012, 2013, 2022, 2023, 2024, 2031, 2032, 2033, 2111, 2112, 2113, 2122, 2123, 2124, 2131, 2132, 2133, 2211, 2212, 2213, 2221, 2222, 2223, 2232, 2233, 2234, 2311, 2312, 2313, 2322, 2323, 2324, 2331, 2332, 2333, 2411, 2412, 2413, 2422, 2423, 2424, 2431, 2432, 2433, 2511, 2512, 2513, 2514, 2515, 2521, 2522, 2523, 2524, 2525, 2531, 2532, 2533, 2534, 2535]
-options = list(range(len(beat_values)))
-select_beat = st.sidebar.selectbox("beat", options, format_func=lambda x: beat_values[x])
 
 district_values = [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,24,25]
 district_options = list(range(len(district_values)))
 select_district = st.sidebar.selectbox("district", district_options, format_func=lambda x: district_values[x])
 
-
-
 domestic = st.sidebar.checkbox("Domestic")
 
 crime_input = pd.DataFrame()
 crime_input.loc[0, 'primary_type'] = type_values[select_type]
+crime_input.loc[0, 'district'] = district_values[select_district]
 crime_input.loc[0, 'domestic'] = domestic
-crime_input.loc[0, 'beat'] = beat_values[select_beat]
-crime_input.loc[0, 'year'] = 2020
+
+# crime_input.loc[0, 'year'] = 2020
 st.sidebar.write(crime_input.loc[[0]])
 
 
 st.sidebar.text("")
 st.sidebar.text("")
 
-@st.cache
-def create_model(X_train, y_train):
-    return clf.fit(X_train, y_train)
-
-model = create_model(X_train, y_train)
-
 predicted = model.predict(crime_input.loc[[0]])
 if predicted:
-    st.sidebar.text("prediction: Arrested!")
+    st.sidebar.markdown("<h4>Prediction: Arrested!</h4>", unsafe_allow_html=True)
 else:
-    st.sidebar.text("prediction: Not Arrested!")
+    st.sidebar.markdown("<h4>Prediction: Not Arrested!</h4>", unsafe_allow_html=True)
