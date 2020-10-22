@@ -4,7 +4,7 @@ import altair as alt
 
 #### Title ####
 
-st.title("Analyzing Chicago Crime Data.")
+st.title("How To Get Away With Murder: Data Edition")
 st.write("If Batman were to study data visualization, it might look something like this.")
 st.markdown("<p>Data taken from the <a href='https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present-Dashboard/5cd6-ry5g'>Chicago Crimes Dataset.</a></p>", unsafe_allow_html = True)
 

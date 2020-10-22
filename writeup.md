@@ -1,4 +1,4 @@
-# Project name
+# How To Get Away With Murder: Data Edition
 
 ![A screenshot of your application. Could be a GIF.](screenshot.png)
 
@@ -11,7 +11,24 @@ TODO: **A clear description of the goals of your project.** Describe the questio
 ## Design
 
 TODO: **A rationale for your design decisions.** How did you choose your particular visual encodings and interaction techniques? What alternatives did you consider and how did you arrive at your ultimate choices?
+We chose our particular visual encodings and interaction techniques by first sketching out different ideas for visualizations that we had. Starting from a bird's eye view, we asked ourselves what information did we want to see at a high level. 
+
+For our question about analyzing types of crime and crime frequencies, we first decided on using an area graph to show the frequencies of different types of crime over time. 
+When considering how to encode the type of crime, we decided on using color as it works easily for categorical data and specifically data with many categories such as the type of crime; however, with data that had so many categories such as the type of crime, it became difficult to read a legend that had so many rows for all the different types of crime.
+To combat this, we elected to use the tooltip to highlight the specific primary type that the user had currently highlighted in addition to the color to provide further information that reinforced the association between color and crime type.
+We repeated this when visualizing changes in frequency and arrest rates over time, where we used the color and tooltip again to convey which primary type of crime the user was currently interacting with. Additionally, we emphasized the current type the user was looking at by making the selection's line bigger and lowering the opacity of all other lines.
+We decided to make the opacity close to 0 but not equal to 0 so that the user would still be able to see the other lines and know where to hover in order to focus on a specific line.
+
+Our other question tackled the location of crime and arrest rates within districts. For this visualization, we first mapped the x and y coordinates of all crimes so that the user could have a form of a heat map that indicated where they could zoom in to see more of the data.
+Because the axes of the data were geographic in nature, we decided to go with a brush selection to function as a sort of mangifying glass for the data and allow users to take a closer peek at the information in front of them. Because geographic boundaries aren't discrete in a manner that crime types are, using a brush selection helps the user easily pan around the data.
+We originally thought of using a histogram to convey the frequencies of crimes per district, but this removed the geographic elements of the x and y coordinates as a histogram would just have the district on one axis. Instead, we decided to keep the x and y coordinates for the zoomed in view of the data, and instead used the size of the dots at the x and y coordinates to communicate frequency.
+Using size also helped visualize relative differences between nearby locations. 
+
+The final visualization relied on examining the different arrest rates per district to see if specific districts were being faced with higher policing rates. Because the visualization was centered around the different districts, we decided to use a map to highlight the different districts so the user could get an idea of where each district was located.
+We then allowed the user to select the district, which would then highlight the crime frequency and arrest rates for that district over time. While we were creating this visualization, we noticed that it was difficult to discern how a particular district compared to the other districts, and combated this by adding an average line for crime frequency and arrest rate so that viewers would be able to see any significant differences between the selected district and the average across all districts.
+Additionally, we considered the interactivity of the graphs showing the rates/frequencies over time. If a user wanted to be able to select the district with the highest arrest rates over time, they would not have been able to do that if they did not first select the district on the map, which could be confusing. Thus, we added an interaction where the line can also be selected by clicking on it similar to clicking on a specific district.
 
 ## Development
 
 TODO: **An overview of your development process.** Describe how the work was split among the team members. Include a commentary on the development process, including answers to the following questions: Roughly how much time did you spend developing your application (in people-hours)? What aspects took the most time?
+
