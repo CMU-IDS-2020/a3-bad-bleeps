@@ -355,6 +355,9 @@ st.write(district_map + points + text | new_chart + avg_count | new_arrests + av
 
 #st.sidebar.write(comp)
 
+st.sidebar.title("Would you be arrested?")
+st.sidebar.write("Enter your own data here and see.")
+
 # select crime type
 type_values = ['arson', 'assault', 'battery', 'burglary', 'concealed carry license violation', 'criminal damage', 'criminal sexual assault', 'criminal trespass', 'crim sexual assault', 'deceptive practice', 'domestic violence', 'gambling', 
 'homicide', 'human trafficking', 'interference with public officer', 'intimidation', 'kidnapping', 'liquor law violation', 'motor vehicle theft', 'narcotics', 'non - criminal', 'non-criminal', 'non-criminal (subject specified)', 'obscenity', 'offense involving children', 'other narcotic violation', 'other offense', 'prostitution', 'public indecency', 'public peace violation', 'ritualism', 'robbery', 'sex offense', 'stalking', 'theft', 'weapons violation']
