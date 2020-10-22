@@ -87,7 +87,7 @@ crimes_points = crimes_base.mark_circle().encode(
     highlight
 )
 
-crimes_lines = crimes_base.mark_line().encode(
+crimes_lines = crimes_base.mark_line(interpolate='basis').encode(
     size=alt.condition(~highlight, alt.value(1), alt.value(3)),
     opacity=alt.condition(highlight, alt.value(1), alt.value(0.3))
 )
@@ -105,7 +105,7 @@ arrests_points = arrests_base.mark_circle().encode(
     highlight
 )
 
-arrests_lines = arrests_base.mark_line().encode(
+arrests_lines = arrests_base.mark_line(interpolate='basis').encode(
     size=alt.condition(~highlight, alt.value(1), alt.value(3)),
     opacity=alt.condition(highlight, alt.value(1), alt.value(0.3))
 )
@@ -176,22 +176,153 @@ coordinate_df = load_coordinate_data(location_url)
 #st.write(coordinate_df)
 
 brush = alt.selection(type='interval')
-slider = alt.binding_range(min=2001, max=2020, name='year: ', step=1)
-selector = alt.selection_single(name='SelectorName', fields=['year'], bind=slider)
+start_year, end_year = st.slider("Years", 2001, 2020, (2001, 2020))
 
 
-location_chart = alt.Chart(coordinate_df).mark_point().encode(
+location_chart = alt.Chart(coordinate_df).mark_point().transform_filter(
+    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])).encode(
     alt.X('x_coordinate:Q', scale=alt.Scale(domain=(1100000,1205000))),
     alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000)))
-).add_selection(brush).add_selection(selector)
+).add_selection(brush)
 
 
 
 
-count_chart = alt.Chart(coordinate_df).mark_point().encode(
+count_chart = alt.Chart(coordinate_df).mark_point().transform_filter(
+    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])).encode(
     alt.X('x_coordinate:Q', scale=alt.Scale(domain=(1100000,1205000))),
     alt.Y('y_coordinate:Q', scale=alt.Scale(domain=(1810000,1960000))),
     size='sum(freq):Q'
-).transform_filter(brush).transform_filter(selector)
+).transform_filter(brush)
 
 st.write(location_chart | count_chart)
+
+@st.cache
+def load_district_data(url):
+    df = pd.read_json(url)
+    df.columns = ['year','district','freq','arrests']
+    df['arrest_rate'] = df['arrests']/df['freq']
+    return df
+
+#district_data = load_district_data("https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,district,count(year),sum(case(arrest='1',1,true,0))&$group=year,district")
+
+#st.write(district_data)
+
+
+@st.cache  # add caching so we load the data only once
+def load_district_arrests():
+    # url for district arrests
+    crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,district,count(district),sum(case(arrest='1',1,true,0))&$group=year,district"
+    #crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=year,district,count(district)&$group=year,district"
+    df_district_count = pd.read_json(crime_url)
+    df_district_count['district'] = df_district_count['district'].dropna().astype(int).astype(str)
+
+    url_geojson = "https://data.cityofchicago.org/resource/24zt-jpfn.geojson"
+    data_geojson_remote = alt.Data(url=url_geojson, format=alt.DataFormat(property='the_geom',type='json'))
+    stations = pd.read_json("https://data.cityofchicago.org/resource/z8bn-74gv.json?$select=district,latitude,longitude")
+    stations = stations[stations['district'] != 'Headquarters'] 
+
+    #st.write(type(stations['district']))
+    #st.write(type(df_district_count['district']))
+    data = pd.merge(stations, df_district_count, on='district')
+    data.columns = ['district','latitude','longitude','year','count_district','arrests']
+    data['arrest_rate'] = data['arrests']/data['count_district']
+
+    return data
+
+data = load_district_arrests()
+st.write(data)
+
+#### new stuff from vivian ####
+
+url_geojson = "https://data.cityofchicago.org/resource/24zt-jpfn.geojson"
+data_geojson_remote = alt.Data(url=url_geojson, format=alt.DataFormat(property='the_geom',type='json'))
+stations = pd.read_json("https://data.cityofchicago.org/resource/z8bn-74gv.json")
+stations = stations[stations['district'] != 'Headquarters'] 
+# print(stations)
+
+#st.write(stations)
+
+
+
+#url_geojson = "https://data.cityofchicago.org/resource/24zt-jpfn.geojson"
+data_geojson_remote = alt.Data(url=url_geojson, format=alt.DataFormat(property='the_geom',type='json'))
+
+# chart object
+district_map = alt.Chart(data_geojson_remote).mark_geoshape(
+    fill='lightgray',
+    stroke='white'
+)
+
+# Points and text
+hover = alt.selection(type='single', on='mouseover', nearest=True,
+                      fields=['latitude', 'longitude', 'district'])
+selector = selector = alt.selection_single(empty='all', fields=['district'])
+
+base = alt.Chart(data).encode(
+    longitude='longitude:Q',
+    latitude='latitude:Q',
+)
+
+text = base.mark_text(dx=10, dy=-10, align='right').encode(
+    alt.Text('district', type='nominal')
+)
+
+points = base.mark_point().encode(
+    color=alt.condition(~selector, alt.value('gray'), alt.value('red')),
+    size=alt.condition(~hover, alt.value(30), alt.value(100)),
+).add_selection(hover, selector)
+
+### graph of counts by district over time
+start_year, end_year = st.slider("Start Year", 2001, 2020, (2001, 2020))
+
+base = chart = alt.Chart(data).mark_line(interpolate='basis').transform_filter(
+    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])
+)
+
+avg_count = base.encode(
+    x='year:O',
+    y='mean(count_district)',
+    color=alt.value('green')
+)
+
+new_chart = base.encode(
+    x='year:O',
+    y='count_district',
+    color=alt.condition(~selector, 'district:O', alt.value('red')),
+    opacity=alt.condition(selector,alt.value(1),alt.value(0.3))
+)
+
+chart = alt.Chart(data).mark_line(interpolate='basis').transform_filter(
+    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])
+).encode(
+    x='year:O',
+    y='count_district',
+    color=alt.condition(~selector, 'district:O', alt.value('red')),
+    opacity=alt.condition(selector,alt.value(1),alt.value(0.3))
+)
+
+avg_arrests = base.encode(
+    x='year:O',
+    y='mean(arrest_rate)',
+    color=alt.value('green')
+)
+
+new_arrests = base.encode(
+    x='year:O',
+    y='arrest_rate:Q',
+    color=alt.condition(~selector, 'district:O', alt.value('red')),
+    opacity=alt.condition(selector,alt.value(1),alt.value(0.3))
+)
+
+arrests = alt.Chart(data).mark_line(interpolate='basis').transform_filter(
+    (start_year <= alt.datum['year']) & (end_year >= alt.datum['year'])
+).encode(
+    x='year:O',
+    y='arrest_rate:Q',
+    color=alt.condition(~selector, 'district:O', alt.value('red')),
+    opacity=alt.condition(selector,alt.value(1),alt.value(0.3))
+)
+
+st.write(district_map + points + text | new_chart + avg_count | new_arrests + avg_arrests)
+
