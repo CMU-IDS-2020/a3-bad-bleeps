@@ -101,7 +101,7 @@ st.write(chart2)
 ###  district map & counts  ###
 ###############################
 
-@st.cache  # add caching so we load the data only once
+# @st.cache  # add caching so we load the data only once
 def load_district_count():
     # url for district arrests
     # crime_url = "https://data.cityofchicago.org/resource/ijzp-q8t2.json?$select=district,count(district),sum(case(arrest='1',1,true,0))&$group=district"
@@ -139,6 +139,8 @@ selector = selector = alt.selection_single(empty='all', fields=['district'])
 base = alt.Chart(data).encode(
     longitude='longitude:Q',
     latitude='latitude:Q',
+).properties(
+    width=100
 )
 
 text = base.mark_text(dx=10, dy=-10, align='right').encode(
@@ -146,7 +148,7 @@ text = base.mark_text(dx=10, dy=-10, align='right').encode(
 )
 
 points = base.mark_point().encode(
-    color=alt.condition(~selector, alt.value('gray'), alt.value('red')),
+    color=alt.condition(~selector, alt.value('gray'), alt.value('#F63366')),
     size=alt.condition(~hover, alt.value(30), alt.value(100)),
 ).add_selection(hover, selector)
 
@@ -158,8 +160,8 @@ chart = alt.Chart(data).mark_line().transform_filter(
 ).encode(
     x='year:O',
     y='count_district',
-    color=alt.condition(~selector, 'district:O', alt.value('red'))
-)
+    color=alt.condition(~selector, 'district:O', alt.value('#F63366'))
+).add_selection(selector)
 
 st.write(district_map + points + text | chart)
 # # select district
@@ -201,9 +203,11 @@ crime_input.loc[0, 'year'] = 2020
 st.sidebar.write(crime_input)
 
 
+st.sidebar.text("")
+st.sidebar.text("")
 predicted = clf.fit(X_train, y_train).predict(crime_input.loc[[0]])
 if predicted:
-    st.sidebar.write("prediction: ", True)
+    st.sidebar.text("prediction: Arrested!")
 else:
-    st.sidebar.write("prediction: ", False)
+    st.sidebar.text("prediction: Not Arrested!")
 
