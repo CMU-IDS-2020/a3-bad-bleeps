@@ -373,6 +373,12 @@ beat_values = [111, 112, 113, 114, 121, 122, 123, 124, 131, 132, 133, 134, 211, 
 options = list(range(len(beat_values)))
 select_beat = st.sidebar.selectbox("beat", options, format_func=lambda x: beat_values[x])
 
+district_values = [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,24,25]
+district_options = list(range(len(district_values)))
+select_district = st.sidebar.selectbox("district", district_options, format_func=lambda x: district_values[x])
+
+
+
 domestic = st.sidebar.checkbox("Domestic")
 
 crime_input = pd.DataFrame()
@@ -380,7 +386,7 @@ crime_input.loc[0, 'primary_type'] = type_values[select_type]
 crime_input.loc[0, 'domestic'] = domestic
 crime_input.loc[0, 'beat'] = beat_values[select_beat]
 crime_input.loc[0, 'year'] = 2020
-st.sidebar.write(crime_input)
+st.sidebar.write(crime_input.loc[[0]])
 
 
 st.sidebar.text("")

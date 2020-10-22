@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
@@ -51,7 +50,7 @@ preprocessor = ColumnTransformer(
 # Append classifier to preprocessing pipeline.
 # Now we have a full prediction pipeline.
 clf = Pipeline(steps=[('preprocessor', preprocessor),
-                      ('classifier', DecisionTreeClassifier())])
+                      ('classifier', LogisticRegression())])
 
 X = df.drop('arrest', axis=1)
 y = df['arrest']
