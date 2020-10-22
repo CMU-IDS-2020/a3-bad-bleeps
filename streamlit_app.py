@@ -382,7 +382,14 @@ st.sidebar.write(crime_input)
 
 st.sidebar.text("")
 st.sidebar.text("")
-predicted = clf.fit(X_train, y_train).predict(crime_input.loc[[0]])
+
+@st.cache
+def create_model(X_train, y_train):
+    return clf.fit(X_train, y_train)
+
+model = create_model(X_train, y_train)
+
+predicted = model.predict(crime_input.loc[[0]])
 if predicted:
     st.sidebar.text("prediction: Arrested!")
 else:
