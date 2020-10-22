@@ -371,9 +371,10 @@ select_district = st.sidebar.selectbox("district", district_options, format_func
 domestic = st.sidebar.checkbox("Domestic")
 
 crime_input = pd.DataFrame()
-crime_input.loc[0, 'primary_type'] = type_values[select_type]
-crime_input.loc[0, 'district'] = district_values[select_district]
-crime_input.loc[0, 'domestic'] = domestic
+crime_input.loc[0, 'Primary Type'] = type_values[select_type]
+crime_input.loc[0, 'District'] = district_values[select_district]
+crime_input.loc[0, 'Year'] = 2020
+crime_input.loc[0, 'Domestic'] = domestic
 
 # crime_input.loc[0, 'year'] = 2020
 st.sidebar.write(crime_input.loc[[0]])
@@ -384,6 +385,6 @@ st.sidebar.text("")
 
 predicted = model.predict(crime_input.loc[[0]])
 if predicted:
-    st.sidebar.markdown("<h4>Prediction: Arrested!</h4>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h4>Prediction: Arrested</h4>", unsafe_allow_html=True)
 else:
-    st.sidebar.markdown("<h4>Prediction: Not Arrested!</h4>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h4>Prediction: Not Arrested</h4>", unsafe_allow_html=True)
