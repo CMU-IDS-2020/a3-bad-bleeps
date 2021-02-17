@@ -372,9 +372,10 @@ domestic = st.sidebar.checkbox("Domestic")
 
 crime_input = pd.DataFrame()
 crime_input.loc[0, 'Primary Type'] = type_values[select_type]
+crime_input.loc[0, 'Domestic'] = domestic
 crime_input.loc[0, 'District'] = district_values[select_district]
 crime_input.loc[0, 'Year'] = 2020
-crime_input.loc[0, 'Domestic'] = domestic
+print('new')
 
 # crime_input.loc[0, 'year'] = 2020
 st.sidebar.write(crime_input.loc[[0]])
